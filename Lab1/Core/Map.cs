@@ -19,6 +19,8 @@ namespace Lab1.Core
         private int _mRows, _mCols;
         private NavigateNode _startNode, _endNode;
 
+        public double TotalWayCost { get; set; }
+
         public Map(Canvas drawCanvas)
         {
             _drawCanvas = drawCanvas;
@@ -148,25 +150,33 @@ namespace Lab1.Core
 
             if (IsInRange(x - 1, y - 1))
             {
-                if (_mMap[x - 1, y - 1].State != NavigateNode.StateEnum.WALL)
+                if (_mMap[x - 1, y - 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x, y - 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x - 1, y].State != NavigateNode.StateEnum.WALL)
                     neighbors.Add(_mMap[x - 1, y - 1]);
             }
 
             if (IsInRange(x + 1, y - 1))
             {
-                if (_mMap[x + 1, y - 1].State != NavigateNode.StateEnum.WALL)
+                if (_mMap[x + 1, y - 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x, y - 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x + 1, y].State != NavigateNode.StateEnum.WALL)
                     neighbors.Add(_mMap[x + 1, y - 1]);
             }
 
             if (IsInRange(x - 1, y + 1))
             {
-                if (_mMap[x - 1, y + 1].State != NavigateNode.StateEnum.WALL)
+                if (_mMap[x - 1, y + 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x, y + 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x - 1, y].State != NavigateNode.StateEnum.WALL)
                     neighbors.Add(_mMap[x - 1, y + 1]);
             }
 
             if (IsInRange(x + 1, y + 1))
             {
-                if (_mMap[x + 1, y + 1].State != NavigateNode.StateEnum.WALL)
+                if (_mMap[x + 1, y + 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x, y + 1].State != NavigateNode.StateEnum.WALL &&
+                    _mMap[x + 1, y].State != NavigateNode.StateEnum.WALL)
                     neighbors.Add(_mMap[x + 1, y + 1]);
             }
 
@@ -191,6 +201,7 @@ namespace Lab1.Core
                 // нашли конец
                 if (current.IsSameLocation(_endNode))
                 {
+                    TotalWayCost = current.TotalCost;
                     current = current.Parent;
                     while (current.Parent != null)
                     {

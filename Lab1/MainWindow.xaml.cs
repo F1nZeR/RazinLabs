@@ -28,6 +28,7 @@ namespace Lab1
         private void FindPathButtonOnClick(object sender, RoutedEventArgs e)
         {
             _map.FindPath((Map.HeuristicEnum) HeuristiComboBox.SelectedIndex);
+            Title = "TotalCost = " + _map.TotalWayCost;
         }
     }
 }
