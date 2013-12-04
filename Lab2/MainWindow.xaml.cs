@@ -33,33 +33,63 @@ namespace Lab2
 
         private void Work()
         {
-            var age = new Attribute("Age", new[] { "18", "19" }, typeof(int));
-            //var salary = new Attribute("Salary", new[] { "60000", "15" }, typeof(string));
-            var pledge = new Attribute("Pledge", new[] { "Yes" }, typeof(string));
+            var age = new Attribute("Age", new[] { "18" }, typeof(int));
+            var salary = new Attribute("Salary", new[] { "25000" }, typeof(string));
+            //var pledge = new Attribute("Pledge", new[] { "No" }, typeof(string));
             var history = new Attribute("Credithistory", new[] { "No" }, typeof(string));
 
-            var attributes = new [] { age, pledge, history };
+            var attributes = new [] { age, salary, history };
 
             var samples = GetDataTable();
 
             var id3 = new DecisionTreeId3();
             var root = id3.MountTree(samples, "Credit", attributes);
 
+            RenameRoot(root);
+
+
             PrintNode(root, "");
+        }
+
+        private void RenameRoot(TreeNode root)
+        {
+            for (int i = 0; i < root.TotalChilds; i++)
+            {
+                var isSuccess = root.UpdateNulls();
+                if (!isSuccess) continue;
+
+                var cur = root.GetChild(i);
+                if (cur == null) continue;
+
+                if (cur.Attribute.Type == typeof (int))
+                {
+                    var newVals = new List<string>();
+                    foreach (var val in cur.Attribute.Values)
+                    {
+                        newVals.Add("<=" + val);
+                        newVals.Add(">" + val);
+                    }
+                    cur.Attribute.Values = newVals.ToArray();
+                }
+                if (cur.TotalChilds > 0)
+                {
+                    RenameRoot(cur);
+                }
+            }
         }
 
         public static void PrintNode(TreeNode root, string tabs)
         {
+            if (root == null || root.Attribute == null) return;
             Console.WriteLine(tabs + '|' + root.Attribute + '|');
 
-            if (root.Attribute.Values != null)
+            if (root.Attribute.Values == null) return;
+            
+            foreach (var nodeValue in root.Attribute.Values)
             {
-                foreach (string nodeValue in root.Attribute.Values)
-                {
-                    Console.WriteLine(tabs + "\t" + "<" + nodeValue + ">");
-                    TreeNode childNode = root.GetChildByBranchName(nodeValue);
-                    PrintNode(childNode, "\t" + tabs);
-                }
+                Console.WriteLine(tabs + "\t" + "<" + nodeValue + ">");
+                var childNode = root.GetChildByBranchName(nodeValue);
+                PrintNode(childNode, "\t" + tabs);
             }
         }
         

@@ -9,7 +9,7 @@ namespace Lab2.Attributes
 {
     public class Attribute
     {
-        readonly ArrayList _mValues;
+        ArrayList _mValues;
         readonly string _mName;
         readonly object _mLabel;
         public Type Type { get; set; }
@@ -45,6 +45,10 @@ namespace Lab2.Attributes
                 if (_mValues != null)
                     return (string[])_mValues.ToArray(typeof(string));
                 return null;
+            }
+            set
+            {
+                _mValues = new ArrayList(value);
             }
         }
 

@@ -9,7 +9,7 @@ namespace Lab2.Attributes
 {
     public class TreeNode
     {
-        private readonly ArrayList _mChilds;
+        private ArrayList _mChilds;
         private readonly Attribute _mAttribute;
 
         public TreeNode(Attribute attribute)
@@ -27,8 +27,13 @@ namespace Lab2.Attributes
             _mAttribute = attribute;
         }
         
-        public void AddTreeNode(TreeNode treeNode, string valueName)
+        public void AddTreeNode(TreeNode treeNode, string valueName, string lessOrGreater = null)
         {
+            if (lessOrGreater != null)
+            {
+                _mChilds.Add(treeNode);
+                return;
+            }
             int index = _mAttribute.IndexValue(valueName);
             _mChilds[index] = treeNode;
         }
@@ -48,9 +53,15 @@ namespace Lab2.Attributes
             get { return _mAttribute; }
         }
 
+        public bool UpdateNulls()
+        {
+            _mChilds = new ArrayList(_mChilds.ToArray().Where(x => x != null).ToArray());
+            return _mChilds.Count > 0;
+        }
+
         public TreeNode GetChildByBranchName(string branchName)
         {
-            int index = _mAttribute.IndexValue(branchName);
+            int index = Math.Abs(_mAttribute.IndexValue(branchName));
             return (TreeNode)_mChilds[index];
         }
     }

@@ -182,8 +182,9 @@ namespace Lab2.Attributes
             var dictVals = CountTotalPositives(samples);
             _mEntropySet = CalcEntropy(dictVals);
 
-            var bestAttribute = GetBestAttribute(samples, attributes);
+            var bestAttribute = GetBestAttribute(samples, attributes) ?? attributes[0];
             var root = new TreeNode(bestAttribute);
+            
             var aSample = samples.Clone();
 
             foreach (var value in bestAttribute.Values)
@@ -214,7 +215,7 @@ namespace Lab2.Attributes
                         var dc3 = new DecisionTreeId3();
                         var childNode = dc3.MountTree(aSample, targetAttribute, (Attribute[])aAttributes.ToArray(typeof(Attribute)));
                         
-                        root.AddTreeNode(childNode, value);
+                        root.AddTreeNode(childNode, value, "<=");
                     }
 
                     {
@@ -237,7 +238,7 @@ namespace Lab2.Attributes
 
                         var dc3 = new DecisionTreeId3();
                         var childNode = dc3.MountTree(aSample, targetAttribute, (Attribute[])aAttributes.ToArray(typeof(Attribute)));
-                        root.AddTreeNode(childNode, value);
+                        root.AddTreeNode(childNode, value, ">");
                     }
                     
                 }
