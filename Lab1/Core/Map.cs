@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -20,6 +23,7 @@ namespace Lab1.Core
         private NavigateNode _startNode, _endNode;
 
         public double TotalWayCost { get; set; }
+        public int DelayTime { get; set; }
 
         public Map(Canvas drawCanvas)
         {
@@ -71,13 +75,19 @@ namespace Lab1.Core
             {
                 for (int j = 0; j < _mCols; j++)
                 {
-                    if (_mMap[i, j].State == NavigateNode.StateEnum.PATH)
-                        _mMap[i, j].State = NavigateNode.StateEnum.NAVIGABLE;
+                    switch (_mMap[i, j].State)
+                    {
+                        case NavigateNode.StateEnum.PATH:
+                        case NavigateNode.StateEnum.OPEN:
+                        case NavigateNode.StateEnum.CLOSE:
+                            _mMap[i, j].State = NavigateNode.StateEnum.NAVIGABLE;
+                            break;
+                    }
                 }
             }
         }
 
-        public void FindPath(HeuristicEnum heuristic)
+        public async Task FindPath(HeuristicEnum heuristic)
         {
             if (!IsValidMap())
             {
@@ -86,8 +96,8 @@ namespace Lab1.Core
             }
             
             ClearPathes();
-            AstarRun(heuristic);
-            Draw();
+            await AstarRun(heuristic);
+            //Draw();
         }
 
         private bool IsValidMap()
@@ -183,7 +193,7 @@ namespace Lab1.Core
             return neighbors;
         }
 
-        private void AstarRun(HeuristicEnum heuristic)
+        private async Task AstarRun(HeuristicEnum heuristic)
         {
             var openSet = new PriorityQueue<NavigateNode>();
             var closeSet = new PriorityQueue<NavigateNode>();
@@ -192,34 +202,31 @@ namespace Lab1.Core
 
             while (!openSet.Empty)
             {
-                // берём из открытого списка
                 var current = openSet.Pop();
 
                 // добавляем в закрытый
                 closeSet.Add(current);
+                current.State = NavigateNode.StateEnum.CLOSE;
 
                 // нашли конец
                 if (current.IsSameLocation(_endNode))
                 {
                     TotalWayCost = current.TotalCost;
+                    current.State = NavigateNode.StateEnum.GOAL;
                     current = current.Parent;
                     while (current.Parent != null)
                     {
                         current.State = NavigateNode.StateEnum.PATH;
                         current = current.Parent;
                     }
+                    current.State = NavigateNode.StateEnum.START;
                     return;
                 }
 
                 var neighbors = GetNeighbors(current);
 
-                foreach (var n in neighbors)
+                foreach (var n in neighbors.Where(n => !closeSet.IsMember(n)))
                 {
-                    if (closeSet.IsMember(n))
-                    {
-                        continue;
-                    }
-
                     if (!openSet.IsMember(n))
                     {
                         n.Parent = current;
@@ -229,6 +236,7 @@ namespace Lab1.Core
 
                         // добавляем к открытому
                         openSet.Add(n);
+                        n.State = NavigateNode.StateEnum.OPEN;
                     }
                     else
                     {
@@ -236,12 +244,13 @@ namespace Lab1.Core
                         // есть лучший путь
                         if (costFromThisPathToM < n.DirectCost)
                         {
-                            n.Parent = current; // меняем предка на n
-                            n.DirectCost = costFromThisPathToM; // перерасчитываем прямую стоимость
-                            n.TotalCost = n.HeuristicCost + n.DirectCost; // перерасчитываем общую стоимость
+                            n.Parent = current;
+                            n.DirectCost = costFromThisPathToM;
+                            n.TotalCost = n.HeuristicCost + n.DirectCost;
                         }
                     }
                 }
+                await Task.Delay(DelayTime);
             }
         }
 

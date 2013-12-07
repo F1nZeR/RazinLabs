@@ -5,6 +5,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Media3D;
 
 namespace Lab2.Attributes
 {
@@ -15,10 +16,8 @@ namespace Lab2.Attributes
         private string _mTargetAttribute;
         private double _mEntropySet;
 
-        private Dictionary<string, int> CountTotalPositives(DataTable samples)
+        private Dictionary<string, int> CountResValuesCount(DataTable samples)
         {
-            //return samples.Rows.Cast<DataRow>().Count(aRow => (bool) aRow[_mTargetAttribute]);
-
             var dictVals = new Dictionary<string, int>();
             foreach (DataRow aRow in samples.Rows)
             {
@@ -45,24 +44,11 @@ namespace Lab2.Attributes
                 result += curRatio;
             }
 
-            //int total = positives + negatives;
-            //double ratioPositive = (double)positives / total;
-            //double ratioNegative = (double)negatives / total;
-
-            //if (Math.Abs(ratioPositive) > 0.01)
-            //    ratioPositive = -(ratioPositive) * Math.Log(ratioPositive, 2);
-            //if (Math.Abs(ratioNegative) > 0.01)
-            //    ratioNegative = -(ratioNegative) * Math.Log(ratioNegative, 2);
-
-            //double result = ratioPositive + ratioNegative;
-
             return result;
         }
 
         private Dictionary<string, int> GetValuesToAttribute(DataTable samples, Attribute attribute, string value)
         {
-            //positives = 0;
-            //negatives = 0;
             var dictVals = new Dictionary<string, int>();
 
             foreach (DataRow aRow in samples.Rows)
@@ -77,11 +63,6 @@ namespace Lab2.Attributes
                     {
                         dictVals.Add(aRow[_mTargetAttribute].ToString(), 1);
                     }
-
-                    //if ((bool)aRow[_mTargetAttribute])
-                    //    positives++;
-                    //else
-                    //    negatives++;
                 }
             }
             return dictVals;
@@ -99,11 +80,13 @@ namespace Lab2.Attributes
                 double entropy = CalcEntropy(valsDict);
                 sum += -(double)(valsDict.Sum(x => x.Value)) / _mTotal * entropy;
             }
-            Console.Out.WriteLine(_mEntropySet + sum);
-            return _mEntropySet + sum;
+            var result = _mEntropySet + sum;
+            Logger.AddLogEntry(this, attribute.AttributeName + ": " + result);
+            attribute.InfoGain = result;
+            return result;
         }
 
-        private Attribute GetBestAttribute(DataTable samples, Attribute[] attributes)
+        private Attribute GetBestAttribute(DataTable samples, IEnumerable<Attribute> attributes)
         {
             double maxGain = 0.0;
             Attribute result = null;
@@ -179,7 +162,7 @@ namespace Lab2.Attributes
             _mTotal = samples.Rows.Count;
             _mTargetAttribute = targetAttribute;
             
-            var dictVals = CountTotalPositives(samples);
+            var dictVals = CountResValuesCount(samples);
             _mEntropySet = CalcEntropy(dictVals);
 
             var bestAttribute = GetBestAttribute(samples, attributes) ?? attributes[0];
@@ -194,8 +177,10 @@ namespace Lab2.Attributes
                 if (bestAttribute.Type == typeof (int))
                 {
                     // имеем дело с циферками
+                    for (int i = 0; i < 2; i++)
                     {
-                        var rows = samples.Select(bestAttribute.AttributeName + " <= " + value);
+                        var sign = i == 0 ? "<=" : ">";
+                        var rows = samples.Select(bestAttribute.AttributeName + " " + sign + " " + value);
                         foreach (var row in rows)
                         {
                             aSample.Rows.Add(row.ItemArray);
@@ -214,33 +199,9 @@ namespace Lab2.Attributes
 
                         var dc3 = new DecisionTreeId3();
                         var childNode = dc3.MountTree(aSample, targetAttribute, (Attribute[])aAttributes.ToArray(typeof(Attribute)));
-                        
-                        root.AddTreeNode(childNode, value, "<=");
+
+                        root.AddTreeNode(childNode, value, sign);
                     }
-
-                    {
-                        var rows = samples.Select(bestAttribute.AttributeName + " > " + value);
-                        foreach (var row in rows)
-                        {
-                            aSample.Rows.Add(row.ItemArray);
-                        }
-
-                        var aAttributes = new ArrayList(attributes.Length - 1);
-                        foreach (var attr in attributes.Where(attr => attr.AttributeName != bestAttribute.AttributeName))
-                        {
-                            aAttributes.Add(attr);
-                        }
-
-                        if (aSample.Rows.Count == 0)
-                        {
-                            return new TreeNode(new Attribute(GetMostCommonValue(samples, targetAttribute)));
-                        }
-
-                        var dc3 = new DecisionTreeId3();
-                        var childNode = dc3.MountTree(aSample, targetAttribute, (Attribute[])aAttributes.ToArray(typeof(Attribute)));
-                        root.AddTreeNode(childNode, value, ">");
-                    }
-                    
                 }
                 else
                 {

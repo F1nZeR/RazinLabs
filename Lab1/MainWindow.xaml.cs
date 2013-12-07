@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 using Lab1.Core;
 
 namespace Lab1
@@ -13,6 +15,7 @@ namespace Lab1
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            FindPathButton.Click += FindPathButtonOnClick;
         }
 
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
@@ -25,9 +28,12 @@ namespace Lab1
             _map.Init(int.Parse(WidthTextBox.Text), int.Parse(HeightTextBox.Text));
         }
 
-        private void FindPathButtonOnClick(object sender, RoutedEventArgs e)
+        private async void FindPathButtonOnClick(object sender, RoutedEventArgs e)
         {
-            _map.FindPath((Map.HeuristicEnum) HeuristiComboBox.SelectedIndex);
+            Title = "TotalCost = ?";
+            _map.DelayTime = int.Parse(DelayTextBox.Text);
+            var heurstic = (Map.HeuristicEnum)HeuristiComboBox.SelectedIndex;
+            await _map.FindPath(heurstic);
             Title = "TotalCost = " + _map.TotalWayCost;
         }
     }

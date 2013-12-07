@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Lab1.Core
 {
@@ -15,7 +17,9 @@ namespace Lab1.Core
             NAVIGABLE,
             PATH,
             GOAL,
-            START
+            START,
+            OPEN,
+            CLOSE
         };
 
         private readonly int _mX;
@@ -33,7 +37,8 @@ namespace Lab1.Core
             set
             {
                 _state = value;
-                UpdateViewCellColor();
+                Application.Current.Dispatcher.Invoke(
+                    DispatcherPriority.Normal, (ThreadStart)UpdateViewCellColor);
             }
         }
 
@@ -137,6 +142,12 @@ namespace Lab1.Core
                     break;
                 case StateEnum.PATH:
                     ViewCell.Fill = Brushes.Red;
+                    break;
+                case StateEnum.OPEN:
+                    ViewCell.Fill = Brushes.LightGray;
+                    break;
+                case StateEnum.CLOSE:
+                    ViewCell.Fill = Brushes.DimGray;
                     break;
             }
         }

@@ -1,9 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Lab2.Attributes
 {
@@ -13,6 +9,7 @@ namespace Lab2.Attributes
         readonly string _mName;
         readonly object _mLabel;
         public Type Type { get; set; }
+        public double InfoGain { get; set; }
 
         public Attribute(string name, string[] values, Type type)
         {
@@ -32,10 +29,7 @@ namespace Lab2.Attributes
 
         public string AttributeName
         {
-            get
-            {
-                return _mName;
-            }
+            get { return _mName; }
         }
 
         public string[] Values
@@ -67,7 +61,7 @@ namespace Lab2.Attributes
 
         public override string ToString()
         {
-            return _mName != string.Empty ? _mName : _mLabel.ToString();
+            return _mName != string.Empty ? string.Format("{0} (gain: {1})", _mName, InfoGain) : _mLabel.ToString();
         }
     }
 }
