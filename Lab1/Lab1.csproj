@@ -64,7 +64,6 @@
     </Compile>
     <Compile Include="Core\Map.cs" />
     <Compile Include="Core\NavigateNode.cs" />
-    <Compile Include="Core\PriorityQueue.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
