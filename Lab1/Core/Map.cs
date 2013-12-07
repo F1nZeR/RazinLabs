@@ -51,7 +51,7 @@ namespace Lab1.Core
         {
             var sizeX = _drawCanvas.ActualWidth;
             var sizeY = _drawCanvas.ActualHeight;
-            var btnSize = (int) Math.Min(sizeX/_mRows, sizeY/_mCols);
+            var btnSize = (int)Math.Min(sizeX / _mRows, sizeY / _mCols);
 
             _drawCanvas.Children.Clear();
             for (int i = 0; i < _mRows; i++)
@@ -61,8 +61,8 @@ namespace Lab1.Core
                     var btnToAdd = _mMap[i, j].ViewCell;
                     btnToAdd.Width = btnSize;
                     btnToAdd.Height = btnSize;
-                    Canvas.SetLeft(btnToAdd, i*btnSize);
-                    Canvas.SetTop(btnToAdd, j*btnSize);
+                    Canvas.SetLeft(btnToAdd, i * btnSize);
+                    Canvas.SetTop(btnToAdd, j * btnSize);
 
                     _drawCanvas.Children.Add(btnToAdd);
                 }
@@ -94,7 +94,7 @@ namespace Lab1.Core
                 MessageBox.Show("Карта невалидна!", "Ошибка!", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
-            
+
             ClearPathes();
             await AstarRun(heuristic);
             //Draw();
@@ -107,7 +107,7 @@ namespace Lab1.Core
             {
                 for (int j = 0; j < _mCols; j++)
                 {
-                    switch (_mMap[i,j].State)
+                    switch (_mMap[i, j].State)
                     {
                         case NavigateNode.StateEnum.START:
                             countStarts++;
@@ -130,64 +130,27 @@ namespace Lab1.Core
             return (x >= 0 && x < _mRows && y >= 0 && y < _mCols);
         }
 
+        private bool IsGoodToGoDiagonal(int origPosX, int origPosY, int x, int y)
+        {
+            return _mMap[origPosX, y].State != NavigateNode.StateEnum.WALL && _mMap[x, origPosY].State != NavigateNode.StateEnum.WALL;
+        }
+
         private IEnumerable<NavigateNode> GetNeighbors(NavigateNode n)
         {
             int x = n.X, y = n.Y;
             var neighbors = new List<NavigateNode>();
-            if (IsInRange(x - 1, y))
-            {
-                if (_mMap[x - 1, y].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x - 1, y]);
-            }
 
-            if (IsInRange(x + 1, y))
+            for (int ix = x-1; ix <= x+1; ix++)
             {
-                if (_mMap[x + 1, y].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x + 1, y]);
-            }
-
-            if (IsInRange(x, y - 1))
-            {
-                if (_mMap[x, y - 1].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x, y - 1]);
-            }
-
-            if (IsInRange(x, y + 1))
-            {
-                if (_mMap[x, y + 1].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x, y + 1]);
-            }
-
-            if (IsInRange(x - 1, y - 1))
-            {
-                if (_mMap[x - 1, y - 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x, y - 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x - 1, y].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x - 1, y - 1]);
-            }
-
-            if (IsInRange(x + 1, y - 1))
-            {
-                if (_mMap[x + 1, y - 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x, y - 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x + 1, y].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x + 1, y - 1]);
-            }
-
-            if (IsInRange(x - 1, y + 1))
-            {
-                if (_mMap[x - 1, y + 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x, y + 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x - 1, y].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x - 1, y + 1]);
-            }
-
-            if (IsInRange(x + 1, y + 1))
-            {
-                if (_mMap[x + 1, y + 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x, y + 1].State != NavigateNode.StateEnum.WALL &&
-                    _mMap[x + 1, y].State != NavigateNode.StateEnum.WALL)
-                    neighbors.Add(_mMap[x + 1, y + 1]);
+                for (int jy = y-1; jy <= y+1; jy++)
+                {
+                    if (!IsInRange(ix, jy) || (x == ix && y == jy) ||
+                        (_mMap[ix, jy].State == NavigateNode.StateEnum.WALL) || !IsGoodToGoDiagonal(x, y, ix, jy))
+                    {
+                        continue;
+                    }
+                    neighbors.Add(_mMap[ix, jy]);
+                }
             }
 
             return neighbors;
@@ -195,66 +158,64 @@ namespace Lab1.Core
 
         private async Task AstarRun(HeuristicEnum heuristic)
         {
-            var openSet = new PriorityQueue<NavigateNode>();
-            var closeSet = new PriorityQueue<NavigateNode>();
+            var openSet = new List<NavigateNode>();
+            var closeSet = new List<NavigateNode>();
 
             openSet.Add(_startNode);
+            _startNode.DirectCost = 0;
+            _startNode.HeuristicCost = GetHeuristicCost(_startNode, heuristic);
+            _startNode.TotalCost = _startNode.DirectCost + _startNode.HeuristicCost;
 
-            while (!openSet.Empty)
+            while (openSet.Any())
             {
-                var current = openSet.Pop();
+                var curNode = openSet.First(z => z.TotalCost.Equals(openSet.Min(y => y.TotalCost)));
+                openSet.Remove(curNode);
 
-                // добавляем в закрытый
-                closeSet.Add(current);
-                current.State = NavigateNode.StateEnum.CLOSE;
+                closeSet.Add(curNode);
+                curNode.State = NavigateNode.StateEnum.CLOSE;
 
-                // нашли конец
-                if (current.IsSameLocation(_endNode))
+                if (curNode.IsSameLocation(_endNode))
                 {
-                    TotalWayCost = current.TotalCost;
-                    current.State = NavigateNode.StateEnum.GOAL;
-                    current = current.Parent;
-                    while (current.Parent != null)
+                    TotalWayCost = curNode.TotalCost;
+                    curNode.State = NavigateNode.StateEnum.GOAL;
+                    curNode = curNode.Parent;
+                    while (curNode.Parent != null)
                     {
-                        current.State = NavigateNode.StateEnum.PATH;
-                        current = current.Parent;
+                        curNode.State = NavigateNode.StateEnum.PATH;
+                        curNode = curNode.Parent;
                     }
-                    current.State = NavigateNode.StateEnum.START;
+                    curNode.State = NavigateNode.StateEnum.START;
                     return;
                 }
 
-                var neighbors = GetNeighbors(current);
-
-                foreach (var n in neighbors.Where(n => !closeSet.IsMember(n)))
+                foreach (var curNeigbNode in GetNeighbors(curNode).Where(n => !closeSet.Contains(n)))
                 {
-                    if (!openSet.IsMember(n))
+                    bool isCurNodeBetterChoice;
+                    var curDirectCost = curNode.DirectCost + GetDirectCost(curNode, curNeigbNode);
+                    if (!openSet.Contains(curNeigbNode))
                     {
-                        n.Parent = current;
-                        n.DirectCost = current.DirectCost + GetDirectCost(current, n);
-                        n.HeuristicCost = GetHeuristicCost(n, heuristic);
-                        n.TotalCost = n.DirectCost + n.HeuristicCost;
-
-                        // добавляем к открытому
-                        openSet.Add(n);
-                        n.State = NavigateNode.StateEnum.OPEN;
+                        openSet.Add(curNeigbNode);
+                        curNeigbNode.State = NavigateNode.StateEnum.OPEN;
+                        isCurNodeBetterChoice = true;
                     }
                     else
                     {
-                        var costFromThisPathToM = current.DirectCost + GetDirectCost(current, n);
-                        // есть лучший путь
-                        if (costFromThisPathToM < n.DirectCost)
-                        {
-                            n.Parent = current;
-                            n.DirectCost = costFromThisPathToM;
-                            n.TotalCost = n.HeuristicCost + n.DirectCost;
-                        }
+                        isCurNodeBetterChoice = curDirectCost < curNeigbNode.DirectCost;
+                    }
+
+                    if (isCurNodeBetterChoice)
+                    {
+                        curNeigbNode.Parent = curNode;
+                        curNeigbNode.DirectCost = curDirectCost;
+                        curNeigbNode.HeuristicCost = GetHeuristicCost(curNeigbNode, heuristic);
+                        curNeigbNode.TotalCost = curNeigbNode.DirectCost + curNeigbNode.HeuristicCost;
                     }
                 }
                 await Task.Delay(DelayTime);
             }
         }
 
-        private double GetDirectCost(NavigateNode n, NavigateNode m)
+        private static double GetDirectCost(NavigateNode n, NavigateNode m)
         {
             var temp = Math.Abs(n.X - m.X) + Math.Abs(n.Y - m.Y);
             return temp == 2 ? 14.0 : 10.0;
@@ -267,17 +228,17 @@ namespace Lab1.Core
             const double d2 = 14;
             double dx = Math.Abs(n.X - _endNode.X);
             double dy = Math.Abs(n.Y - _endNode.Y);
-            
+
             switch (heuristic)
             {
                 case HeuristicEnum.Manhattan:
-                    return d*(dx + dy);
-                    
+                    return d * (dx + dy);
+
                 case HeuristicEnum.Diagonal:
-                    return d*(dx + dy) + (d2 - 2*d)*Math.Min(dx, dy);
+                    return d * (dx + dy) + (d2 - 2 * d) * Math.Min(dx, dy);
 
                 case HeuristicEnum.Euclidean:
-                    return d*Math.Sqrt(dx*dx + dy*dy);
+                    return d * Math.Sqrt(dx * dx + dy * dy);
             }
 
             throw new MissingMethodException("Запрошена неизвестная эвристика!");

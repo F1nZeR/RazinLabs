@@ -5,21 +5,14 @@ namespace Lab1.Core
 {
     internal class PriorityQueue<T> where T : IComparable<T>
     {
-        /**
-         *  internal data
-         */
         private readonly List<T> _mList = new List<T>();
 
 
-        /// <summary>Returns the number of elements in the queue.</summary>
         public int Count
         {
             get { return _mList.Count; }
         }
 
-        /// <summary>Returns true if the queue is empty.</summary>
-        /// Trying to call Peek() or Next() on an empty queue will throw an exception.
-        /// Check using Empty first before calling these methods.
         public bool Empty
         {
             get { return _mList.Count == 0; }
@@ -42,9 +35,6 @@ namespace Lab1.Core
             }
         }
 
-
-        /// <summary>Allows you to look at the first element waiting in the queue, without removing it.</summary>
-        /// This element will be the one that will be returned if you subsequently call Next().
         public T Peek()
         {
             return _mList[0];
@@ -55,8 +45,6 @@ namespace Lab1.Core
             return _mList.IndexOf(item) >= 0;
         }
 
-        /// <summary>Removes and returns the first element from the queue (least element)</summary>
-        /// <returns>The first element in the queue, in ascending order.</returns>
         public T Pop()
         {
             // The element to return is of course the first element in the array, 

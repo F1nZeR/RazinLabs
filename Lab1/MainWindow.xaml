@@ -12,7 +12,7 @@
                 <ComboBoxItem>Diagonal</ComboBoxItem>
                 <ComboBoxItem>Euclidean</ComboBoxItem>
             </ComboBox>
-            <TextBox x:Name="DelayTextBox" Width="50" Margin="5">100</TextBox>
+            <TextBox x:Name="DelayTextBox" Width="50" Margin="5">10</TextBox>
             <Button x:Name="FindPathButton" Width="70" Margin="5 5">Find Path!</Button>
         </WrapPanel>
         <Canvas x:Name="DrawCanvas" />

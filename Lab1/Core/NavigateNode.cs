@@ -49,7 +49,11 @@ namespace Lab1.Core
         public double TotalCost
         {
             get { return _mTotalCost; }
-            set { _mTotalCost = value; }
+            set
+            {
+                _mTotalCost = value;
+                ViewCell.ToolTip = TotalCost;
+            }
         }
 
         public int X
@@ -73,12 +77,21 @@ namespace Lab1.Core
 
             ViewCell = new Rectangle {Stroke = Brushes.Black};
             ViewCell.MouseDown += ViewCellOnClick;
+            ViewCell.MouseMove += ViewCellOnMouseMove;
 
             State = state;
             DirectCost = 0.0;
             HeuristicCost = 0.0;
             _mTotalCost = 0.0;
             Parent = null;
+        }
+
+        private void ViewCellOnMouseMove(object sender, MouseEventArgs mouseEventArgs)
+        {
+            if (mouseEventArgs.RightButton == MouseButtonState.Pressed)
+            {
+                State = StateEnum.WALL;
+            }
         }
 
         private void ViewCellOnClick(object sender, MouseButtonEventArgs args)
@@ -92,10 +105,6 @@ namespace Lab1.Core
             switch (State)
             {
                 case StateEnum.NAVIGABLE:
-                    State = StateEnum.WALL;
-                    break;
-
-                case StateEnum.WALL:
                     State = StateEnum.START;
                     break;
 
