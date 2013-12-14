@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{954D195D-F6B8-4027-99D4-0F3DB6E07789}</ProjectGuid>
+    <ProjectGuid>{A87AEB6E-CC2C-459B-A403-9D521FE61676}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Lab2</RootNamespace>
@@ -62,10 +62,12 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Attributes\Attribute.cs" />
-    <Compile Include="Attributes\DecisionTreeId3.cs" />
-    <Compile Include="Attributes\Logger.cs" />
-    <Compile Include="Attributes\TreeNode.cs" />
+    <Compile Include="Core\Attribute.cs" />
+    <Compile Include="Core\DecisionTree.cs" />
+    <Compile Include="Helper\FileTreeReader.cs" />
+    <Compile Include="Helper\Logger.cs" />
+    <Compile Include="Core\TreeNode.cs" />
+    <Compile Include="Helper\ObjectCopier.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>

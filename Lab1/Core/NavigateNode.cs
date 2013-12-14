@@ -153,7 +153,7 @@ namespace Lab1.Core
                     ViewCell.Fill = Brushes.Red;
                     break;
                 case StateEnum.OPEN:
-                    ViewCell.Fill = Brushes.LightGray;
+                    ViewCell.Fill = Brushes.DarkGray;
                     break;
                 case StateEnum.CLOSE:
                     ViewCell.Fill = Brushes.DimGray;

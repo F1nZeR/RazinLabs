@@ -24,6 +24,7 @@ namespace Lab1.Core
 
         public double TotalWayCost { get; set; }
         public int DelayTime { get; set; }
+        public bool IsDiagonalMoveEnabled { get; set; }
 
         public Map(Canvas drawCanvas)
         {
@@ -145,7 +146,7 @@ namespace Lab1.Core
                 for (int jy = y-1; jy <= y+1; jy++)
                 {
                     if (!IsInRange(ix, jy) || (x == ix && y == jy) ||
-                        (_mMap[ix, jy].State == NavigateNode.StateEnum.WALL) || !IsGoodToGoDiagonal(x, y, ix, jy))
+                        (_mMap[ix, jy].State == NavigateNode.StateEnum.WALL) || (!IsDiagonalMoveEnabled && !IsGoodToGoDiagonal(x, y, ix, jy)))
                     {
                         continue;
                     }
@@ -168,7 +169,7 @@ namespace Lab1.Core
 
             while (openSet.Any())
             {
-                var curNode = openSet.First(z => z.TotalCost.Equals(openSet.Min(y => y.TotalCost)));
+                var curNode = openSet.Last(z => z.TotalCost.Equals(openSet.Min(y => y.TotalCost)));
                 openSet.Remove(curNode);
 
                 closeSet.Add(curNode);
@@ -223,7 +224,6 @@ namespace Lab1.Core
 
         private double GetHeuristicCost(NavigateNode n, HeuristicEnum heuristic)
         {
-            // http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html
             const double d = 10;
             const double d2 = 14;
             double dx = Math.Abs(n.X - _endNode.X);

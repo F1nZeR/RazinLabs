@@ -31,6 +31,7 @@ namespace Lab1
         private async void FindPathButtonOnClick(object sender, RoutedEventArgs e)
         {
             Title = "TotalCost = ?";
+            _map.IsDiagonalMoveEnabled = DiagonalMoveCheckBox.IsChecked.HasValue && DiagonalMoveCheckBox.IsChecked.Value;
             _map.DelayTime = int.Parse(DelayTextBox.Text);
             var heurstic = (Map.HeuristicEnum)HeuristiComboBox.SelectedIndex;
             await _map.FindPath(heurstic);

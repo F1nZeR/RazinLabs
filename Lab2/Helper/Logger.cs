@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Lab2_Correct.Core;
 
-namespace Lab2.Attributes
+namespace Lab2_Correct.Helper
 {
     public class Logger
     {
-        private static DecisionTreeId3 _prevId3;
+        private static DecisionTree _prevId3;
         public static string LogText { get; set; }
 
-        public static void Init(DecisionTreeId3 id3)
+        public static void Init(DecisionTree id3)
         {
             LogText = string.Empty;
             _prevId3 = id3;
         }
 
-        public static void AddLogEntry(DecisionTreeId3 curId3, string entryText)
+        public static void AddLogEntry(DecisionTree curId3, string entryText)
         {
             if (curId3 != _prevId3)
             {

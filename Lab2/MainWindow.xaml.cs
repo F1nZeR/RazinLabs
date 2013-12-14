@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,183 +13,151 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Lab2.Attributes;
-using Attribute = Lab2.Attributes.Attribute;
+using Lab2_Correct.Core;
+using Lab2_Correct.Helper;
+using Attribute = Lab2_Correct.Core.Attribute;
 
-namespace Lab2
+namespace Lab2_Correct
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private DataTable _samples;
-
         public MainWindow()
         {
             InitializeComponent();
             Loaded += OnLoaded;
         }
 
+        private TreeNode _res;
+        private string _goalAttr;
+
         private void OnLoaded(object sender, RoutedEventArgs routedEventArgs)
         {
-            _samples = GetDataTable();
+            var fileReader = new FileTreeReader();
+            var inputAttrs = fileReader.ReadTable("data.txt");
+            _goalAttr = fileReader.GoalAttrName;
+            LoadInputs(inputAttrs.Where(x => x.Name != _goalAttr).ToList());
+
+            var dTree = new DecisionTree(inputAttrs, _goalAttr);
+            Logger.Init(dTree);
+
+            var parent = new TreeViewItem() {Header = "RESULT", IsExpanded = true};
+            _res = dTree.MountTree();
+            FillTree(_res, parent);
+            DecisionTree.Items.Add(parent);
+            Log.Text = Logger.LogText;
         }
 
-        private void Work()
+        private void LoadInputs(IEnumerable<Attribute> inputAttrs)
         {
-            var attributes = GetInputData();
-
-            //var age = new Attribute("Age", new[] { "18" }, typeof(int));
-            //var salary = new Attribute("Salary", new[] { "25000" }, typeof(int));
-            ////var pledge = new Attribute("Pledge", new[] { "No" }, typeof(string));
-            //var history = new Attribute("Credithistory", new[] { "No" }, typeof(string));
-
-            //var attributes = new[] { age, salary, history };
-            
-            var id3 = new DecisionTreeId3();
-            Logger.Init(id3);
-            var root = id3.MountTree(_samples, "Credit", attributes.ToArray());
-
-            RenameRoot(root);
-
-            var parentItem = new TreeViewItem() { Header = "RESULT", IsExpanded = true };
-            PrintNode(root, parentItem);
-            DecisionTree.Items.Clear();
-            DecisionTree.Items.Add(parentItem);
-            LogTextBlock.Text = Logger.LogText;
-        }
-
-        private IEnumerable<Attribute> GetInputData()
-        {
-            foreach (var textBox in EditorWrap.Children.OfType<TextBox>())
+            foreach (var attribute in inputAttrs)
             {
-                var name = textBox.Name;
-                var values = textBox.Text.Split(new[] {','}, StringSplitOptions.RemoveEmptyEntries);
-                if (!values.Any()) continue;
-                var type = (Type) textBox.Tag;
-                yield return new Attribute(name, values, type);
+                EditorWrap.Children.Add(new TextBlock
+                {
+                    Text = attribute.Name,
+                    Width = EditorWrap.ActualWidth / 3,
+                    Margin = new Thickness(0, 0, 0, 5)
+                });
+                EditorWrap.Children.Add(new TextBox
+                {
+                    Name = attribute.Name.Replace(" ", ""),
+                    Tag = attribute.IsQuantity,
+                    Width = EditorWrap.ActualWidth * 2 / 3,
+                    Margin = new Thickness(0, 0, 0, 5)
+                });
+            }
+            var btn = new Button()
+            {
+                Content = "Run query",
+                Width = EditorWrap.ActualWidth,
+                Height = 30
+            };
+            btn.Click += (sender, args) => RunQuery();
+            EditorWrap.Children.Add(btn);
+        }
+        
+        private void FillTree(TreeNode node, TreeViewItem parent)
+        {
+            var child = new TreeViewItem() {Header = node.DisplayName, IsExpanded = true};
+            parent.Items.Add(child);
+
+            if (node.HasChilds())
+            {
+                foreach (var children in node.GetChildrens())
+                {
+                    FillTree(children, child);
+                }
             }
         }
 
-        private void RenameRoot(TreeNode root)
-        {
-            var isSuccess = root.UpdateNulls();
-            if (!isSuccess) return;
 
-            if (root.Attribute.Type == typeof(int))
+        private void RunQuery()
+        {
+            var res = FindAttr(_res);
+            MessageBox.Show("Решение: " + res);
+        }
+
+        private string FindAttr(TreeNode curNode)
+        {
+            if (curNode.Name == _goalAttr)
             {
-                var newVals = new List<string>();
-                var correctValues = root.Attribute.Values.Where(x => !Regex.IsMatch(x, "<=|>")).ToList();
-                
-                // уже нормальные названия
-                if (!correctValues.Any() && root.Attribute.Values.Any())
+                return curNode.Value;
+            }
+
+            if (curNode.Value == "")
+            {
+                foreach (var children in curNode.GetChildrens())
                 {
-                    newVals = root.Attribute.Values.ToList();
+                    var res = FindAttr(children);
+                    if (res != "WTF") return res;
+                }
+            }
+            else
+            {
+                // curnode = age: <18
+                var tb = EditorWrap.Children.OfType<TextBox>().Single(x => x.Name == curNode.Name.Replace(" ", ""));
+                var tbVal = tb.Text;
+                if ((bool) tb.Tag)
+                {
+                    if (curNode.Value.Contains("<"))
+                    {
+                        if (int.Parse(tbVal) < int.Parse(curNode.Value.Replace("<", "")))
+                        {
+                            foreach (var children in curNode.GetChildrens())
+                            {
+                                var res = FindAttr(children);
+                                if (res != "WTF") return res;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (int.Parse(tbVal) >= int.Parse(curNode.Value.Replace(">=", "")))
+                        {
+                            foreach (var children in curNode.GetChildrens())
+                            {
+                                var res = FindAttr(children);
+                                if (res != "WTF") return res;
+                            }
+                        }
+                    }
+                    
                 }
                 else
                 {
-                    foreach (var val in correctValues)
+                    if (curNode.Value == tbVal)
                     {
-                        newVals.Add("<=" + val);
-                        newVals.Add(">" + val);
+                        foreach (var children in curNode.GetChildrens())
+                        {
+                            var res = FindAttr(children);
+                            if (res != "WTF") return res;
+                        }
                     }
                 }
-                root.Attribute.Values = newVals.ToArray();
             }
-
-            for (int i = 0; i < root.TotalChilds; i++)
-            {
-                var cur = root.GetChild(i);
-                if (cur == null) continue;
-                RenameRoot(cur);
-            }
-        }
-
-        public static void PrintNode(TreeNode root, TreeViewItem parent)
-        {
-            if (root == null || root.Attribute == null) return;
-            var attr = new TreeViewItem() { Header = root.Attribute, IsExpanded = true };
-            parent.Items.Add(attr);
-
-            if (root.Attribute.Values == null) return;
-
-            foreach (var nodeValue in root.Attribute.Values)
-            {
-                var val = new TreeViewItem() {Header = nodeValue, IsExpanded = true};
-                attr.Items.Add(val);
-
-                var childNode = root.GetChildByBranchName(nodeValue);
-                PrintNode(childNode, val);
-            }
-        }
-
-        //public static void PrintNode(TreeNode root, string tabs)
-        //{
-        //    if (root == null || root.Attribute == null) return;
-        //    Console.WriteLine(tabs + '|' + root.Attribute + '|');
-
-        //    if (root.Attribute.Values == null) return;
-            
-        //    foreach (var nodeValue in root.Attribute.Values)
-        //    {
-        //        Console.WriteLine(tabs + "\t" + "<" + nodeValue + ">");
-        //        var childNode = root.GetChildByBranchName(nodeValue);
-        //        PrintNode(childNode, "\t" + tabs);
-        //    }
-        //}
-        
-        private DataTable GetDataTable()
-        {
-            EditorWrap.Children.Clear();
-            var result = new DataTable("work");
-
-            var inputTextLines = File.ReadAllLines("data.txt");
-            var headers = inputTextLines[0].Split('\t');
-            foreach (var header in headers)
-            {
-                var matches = Regex.Matches(header, @"(\w|\s)+");
-                var column = result.Columns.Add(matches[0].Value.Replace(" ", ""));
-                var type = matches[1].Value;
-                column.DataType = type == "q" ? typeof (int) : typeof (string);
-
-
-                if (type == "g")
-                {
-                    TargetAttrTextBlock.Text = "Целевой атрибут: " + matches[0].Value;
-                }
-                else
-                {
-                    EditorWrap.Children.Add(new TextBlock
-                    {
-                        Text = matches[0].Value, 
-                        Width = EditorWrap.ActualWidth / 3, 
-                        Margin = new Thickness(0, 0, 0, 5)
-                    });
-                    EditorWrap.Children.Add(new TextBox
-                    {
-                        Name = matches[0].Value,
-                        Tag = column.DataType,
-                        Width = EditorWrap.ActualWidth * 2 / 3, 
-                        Margin = new Thickness(0, 0, 0, 5)
-                    });
-                }
-
-            }
-
-            for (int row = 1; row < inputTextLines.Count(); row++)
-            {
-                var strValues = inputTextLines[row].Split('\t');
-                result.Rows.Add(strValues.Cast<object>().ToArray());
-            }
-
-            return result;
-
-        }
-
-        private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
-        {
-            Work();
+            return "WTF";
         }
     }
 }

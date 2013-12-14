@@ -6,14 +6,15 @@
         <WrapPanel DockPanel.Dock="Top" Height="30" Margin="5">
             <TextBox x:Name="WidthTextBox" Width="50" Margin="5">25</TextBox>
             <TextBox x:Name="HeightTextBox" Width="50" Margin="5">15</TextBox>
-            <Button x:Name="DrawAreaButton" Width="70" Margin="5 5" Click="DrawAreaButtonOnClick">Draw!</Button>
+            <Button x:Name="DrawAreaButton" Width="70" Margin="5 5" Click="DrawAreaButtonOnClick">Draw</Button>
             <ComboBox SelectedIndex="0" VerticalAlignment="Center" Margin="5 5" x:Name="HeuristiComboBox">
                 <ComboBoxItem>Manhattan</ComboBoxItem>
                 <ComboBoxItem>Diagonal</ComboBoxItem>
                 <ComboBoxItem>Euclidean</ComboBoxItem>
             </ComboBox>
             <TextBox x:Name="DelayTextBox" Width="50" Margin="5">10</TextBox>
-            <Button x:Name="FindPathButton" Width="70" Margin="5 5">Find Path!</Button>
+            <CheckBox VerticalAlignment="Center" x:Name="DiagonalMoveCheckBox">DiagonalMove</CheckBox>
+            <Button x:Name="FindPathButton" Width="70" Margin="5 5">Find Path</Button>
         </WrapPanel>
         <Canvas x:Name="DrawCanvas" />
     </DockPanel>
