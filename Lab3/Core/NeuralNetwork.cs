@@ -30,7 +30,7 @@ namespace Lab3.Core
             Init();
         }
 
-        public void Teach(List<Tuple<List<double>, List<double>>> tests, double error, Label label)
+        public void Teach(List<Test> tests, double error, Label label)
         {
             var rnd = new Random();
             var currError = error + 1;
@@ -40,8 +40,8 @@ namespace Lab3.Core
                 currError = 0;
                 foreach (var test in tests)
                 {
-                    ForwardPass(test.Item1);
-                    BackwardPass(test.Item2);
+                    ForwardPass(test.Input);
+                    BackwardPass(test.ResValues);
                     currError += _testError;
                 }
                 currError /= tests.Count;

@@ -49,6 +49,7 @@
     <Compile Include="Core\NeuralNetwork.cs" />
     <Compile Include="Core\NeuralWorker.cs" />
     <Compile Include="Core\Neuron.cs" />
+    <Compile Include="Core\Test.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

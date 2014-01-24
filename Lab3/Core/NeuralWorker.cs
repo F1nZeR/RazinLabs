@@ -12,7 +12,7 @@ namespace Lab3.Core
     public class NeuralWorker
     {
         private readonly NeuralNetwork _neuralNetwork;
-        private List<Tuple<List<double>, List<double>>> _learningTuples; 
+        private List<Test> _learningTuples;
         private static readonly Random Rnd = new Random();
         private readonly Label _label;
 
@@ -25,7 +25,7 @@ namespace Lab3.Core
 
         private void CreateLearningTuples(string path)
         {
-            _learningTuples = new List<Tuple<List<double>, List<double>>>();
+            _learningTuples = new List<Test>();
             var folders = Directory.EnumerateDirectories(path);
             var trainingDict = folders.ToDictionary(x => int.Parse(Path.GetFileName(x)), x => Directory.EnumerateFiles(x).ToList());
 
@@ -40,12 +40,13 @@ namespace Lab3.Core
                 var folder = trainingDict[number];
                 var img = folder[Rnd.Next(folder.Count)];
                 folder.Remove(img);
-                
+
                 var output = new double[10];
                 output[number] = 1;
 
-                var imgVector = Helper.GetBinaryVectorFromImage(img).Select(x => (double) x).ToList();
-                _learningTuples.Add(Tuple.Create(imgVector, output.ToList()));
+                var imgVector = Helper.GetBinaryVectorFromImage(img).Select(x => (double)x).ToList();
+                var test = new Test(imgVector, number);
+                _learningTuples.Add(test);
             }
         }
 
@@ -56,6 +57,7 @@ namespace Lab3.Core
 
         public List<double> Recognize(List<double> input)
         {
+            ;
             return _neuralNetwork.Calculate(input);
         }
     }
